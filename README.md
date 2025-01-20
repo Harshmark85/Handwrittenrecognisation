@@ -1,48 +1,61 @@
-Handwritten Digit Recognition Project
-This project focuses on building a machine learning model to recognize handwritten digits from images. It uses a dataset of handwritten digits (commonly the MNIST dataset) to train a model that can accurately classify new, unseen digits. The project leverages Python and popular libraries like TensorFlow, Keras, or Scikit-learn to implement the recognition system.
+import tensorflow as tf
+from PIL import Image, ImageOps
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import streamlit as st
+from streamlit_drawable_canvas import st_canvas
 
-Table of Contents
-Introduction
-Dataset
-Project Setup
-Model Architecture
-Training the Model
-Evaluating the Model
-Running the Application
-Conclusion
-References
-1. Introduction
-Handwritten digit recognition is a common problem in the field of computer vision and machine learning. The goal of this project is to design a model that can identify and classify digits written by humans. This problem is often tackled using neural networks, especially deep learning models.
+# App
+def predictDigit(image):
+    model = tf.keras.models.load_model("C:\harshminiproject\Handwritten-Digit-Recognition\model\handwritten.h5")
+    image = ImageOps.grayscale(image)
+    img = image.resize((28,28))
+    img = np.array(img, dtype='float32')
+    img = img/255
+    plt.imshow(img)
+    plt.show()
+    img = img.reshape((1,28,28,1))
+    pred= model.predict(img)
+    result = np.argmax(pred[0])
+    return result
 
-2. Dataset
-The primary dataset used in this project is the MNIST dataset (Modified National Institute of Standards and Technology). This dataset contains 60,000 training images and 10,000 test images of handwritten digits (0 to 9). Each image is a 28x28 grayscale image of a digit.
+# Streamlit 
+st.set_page_config(page_title='Handwritten Digit Recognition', layout='wide')
+st.title('Handwritten Digit Recognition')
+st.subheader("Draw the digit on canvas and click on 'Predict Now'")
 
-Training Set: 60,000 labeled images
-Test Set: 10,000 labeled images
-Input format: 28x28 pixel grayscale images of digits
-Output format: 10 possible classes (digits 0-9)
-3. Project Setup
-Requirements:
-Python (version 3.6 or higher)
-TensorFlow or Keras
-NumPy
-Matplotlib
-Scikit-learn (optional for additional utilities)
-Clone this repository:
+# Add canvas component
+# Specify canvas parameters in application
+drawing_mode = "freedraw"
+stroke_width = st.slider('Select Stroke Width', 1, 30, 15)
+stroke_color = '#FFFFFF' # Set background color to white
+bg_color = '#000000'
 
-bash
-Copy
-git clone https://github.com/your-username/handwritten-digit-recognition.git
-cd handwritten-digit-recognition
-Install required dependencies:
+# Create a canvas component
+canvas_result = st_canvas(
+    fill_color="rgba(255, 165, 0, 0.3)",  # Fixed fill color with some opacity
+    stroke_width=stroke_width,
+    stroke_color=stroke_color,
+    background_color=bg_color,
+    height=200,
+    width=200,
+    key="canvas",
+)
 
-bash
-Copy
-pip install -r requirements.txt
-(Optional) Create and activate a virtual environment:
+# Add "Predict Now" button
+if st.button('Predict Now'):
+    if canvas_result.image_data is not None:
+        input_numpy_array = np.array(canvas_result.image_data)
+        input_image = Image.fromarray(input_numpy_array.astype('uint8'),'RGBA')
+        input_image.save('C:\harshminiproject\Handwritten-Digit-Recognition\prediction\img.png')
+        img = Image.open("C:\harshminiproject\Handwritten-Digit-Recognition\prediction\img.png")
+        res = predictDigit(img)
+        st.header('Predicted Digit: ' + str(res))
+    else:
+        st.header('Please draw a digit on the canvas.')
 
-bash
-Copy
-python -m venv venv
-source venv/bin/activate  # For Linux/Mac
-venv\Scripts\activate     # For Windows
+# Add sidebar
+st.sidebar.title("About")
+st.sidebar.text("Created by Harsh Vardhan Naudiyal")
+
